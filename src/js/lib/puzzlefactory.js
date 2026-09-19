@@ -26,6 +26,10 @@ var puzzleFactory = execMain(function() {
 		return this.twistyScene.applyMoves(args);
 	};
 
+	Puzzle.prototype.setPose = function(quaternion) {
+		return this.twistyScene.setPose ? this.twistyScene.setPose(quaternion) : false;
+	};
+
 	Puzzle.prototype.addMoveListener = function(listener) {
 		return this.twistyScene.addMoveListener(listener);
 	};

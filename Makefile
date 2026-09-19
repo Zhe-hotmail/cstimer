@@ -24,6 +24,7 @@ lib/tdconverter.js \
 lib/lzstring.js \
 lib/min2phase.js \
 lib/cubeutil.js \
+lib/giikerpose.js \
 lib/puzzlefactory.js \
 kernel.js \
 export.js \

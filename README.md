@@ -2,6 +2,53 @@
 
 Professional Speedcubing/Training Timer
 
+## Personal F2L trainer
+
+This fork adds opt-in GAN Gen2/Gen4 gyroscope following and visual categories
+for **3x3x3 CFOP > F2L single pair** (`lsll2`). It retains csTimer's Bluetooth
+pairing, move processing, virtual-state remapping and continuous-training solver.
+
+In Chrome or Edge, open the HTTPS site (not the embedded Teams browser), select
+Bluetooth cube input, **Virtual** display, **Continuous training**, and enable
+**Follow GAN gyroscope** under virtual/Bluetooth cube settings. Before the first
+gyro sample, align the physical cube with the displayed orientation. Use
+**Calibrate orientation** to re-align later; it does not reset the cube's state.
+Pose is retained between exercises. Whole-cube rotations do not start the timer
+or count as moves. Other displays and devices retain their existing behavior.
+The status shows the protocol only after receiving valid gyro data; it does not
+infer gyro support from a model name. Gen1/Gen3 gyro decoding is not implemented.
+Hardware acceptance with the user's specific GAN cube is still required.
+
+Use scramble options to select groups or individual case thumbnails. "Same top
+color" compares the target corner's and edge's **U-face stickers**, not the U
+center. "Different top colors adjacent" means their U-face stickers share a side;
+"separated" means they do not. "Cross color on top" means the target corner's
+cross-color sticker points up. Cases with pieces in the slot have separate
+groups. Existing case numbers, probabilities, selections and ZBLS labels remain
+unchanged. Deselect **Solved-42** for drills. Any solution restoring F2L is
+accepted, regardless of the resulting last layer.
+
+Build a static site on Windows or Linux with Node.js and Java 11+:
+
+```
+node npm_export/testbench/training-test.js
+node experiment/build-static.js
+node npm_export/testbench/static-test.js
+```
+
+The build reuses the Makefile source lists and bundled Closure compiler, and
+writes `dist/local`. Serve that folder over localhost for development or HTTPS
+for Bluetooth use. All assets use relative paths for GitHub project Pages.
+Language selection, including `?lang=zh-cn`, works without PHP. The existing
+Pages workflow builds this output; select **GitHub Actions** in repository
+Settings > Pages when publishing. No server-side API or offline cache is
+included. csTimer's hosted account/import/export services may not work on this
+origin; use local file export for backups. Settings from cstimer.net do not
+automatically transfer.
+
+GAN packet layout reference:
+[gan-web-bluetooth](https://github.com/afedotov/gan-web-bluetooth/blob/65173e2cdd0fa38ef384f237f6da8d76c177ed1e/src/gan-cube-protocol.ts).
+This fork remains GPL-3.0; its static About page links the source and license.
 
 # Versions and Update Policy
 

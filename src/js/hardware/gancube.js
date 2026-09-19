@@ -556,6 +556,28 @@ execMain(function() {
 		parseV2Data(value);
 	}
 
+	function parseGyro(value, offset, protocol) {
+		if (value.length < offset + 64) {
+			giikerutil.log('[gancube]', 'truncated gyro packet', protocol);
+			return;
+		}
+		// Four big-endian sign/magnitude words in w,x,y,z order (GAN Gen2/Gen4).
+		var q = [];
+		var norm = 0;
+		for (var i = 0; i < 4; i++) {
+			var word = parseInt(value.slice(offset + i * 16, offset + i * 16 + 16), 2);
+			var n = (word & 0x7fff) / 32767 * (word & 0x8000 ? -1 : 1);
+			q.push(n);
+			norm += n * n;
+		}
+		if (!isFinite(norm) || norm < 0.5 || norm > 1.5) {
+			giikerutil.log('[gancube]', 'invalid gyro quaternion', protocol);
+			return;
+		}
+		norm = Math.sqrt(norm);
+		GiikerCube.gyroCallback([q[1] / norm, q[2] / norm, q[3] / norm, q[0] / norm], protocol);
+	}
+
 	function parseV2Data(value) {
 		var locTime = $.now();
 		value = decode(value);
@@ -565,6 +587,7 @@ execMain(function() {
 		value = value.join('');
 		var mode = parseInt(value.slice(0, 4), 2);
 		if (mode == 1) { // gyro
+			parseGyro(value, 4, 'GAN Gen2');
 		} else if (mode == 2) { // cube move
 			giikerutil.log('[gancube]', 'v2 received move event', value);
 			moveCnt = parseInt(value.slice(4, 12), 2);
@@ -1007,6 +1030,7 @@ execMain(function() {
 			giikerutil.log('[gancube]', 'v4 battery level', batteryLevel);
 			giikerutil.updateBattery([batteryLevel, deviceName + '*']);
 		} else if (mode == 0xEC) { // gyro
+			parseGyro(value, 16, 'GAN Gen4');
 		} else {
 			giikerutil.log('[gancube]', 'v4 received unknown event', mode, value);
 		}

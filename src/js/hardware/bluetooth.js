@@ -92,6 +92,7 @@ function BtDeviceGroupFactory() {
 	var onDisconnect = onHardwareEvent.bind(null, 'disconnect');
 
 	function init(reconnect) {
+		gyroCallback(null);
 		return giikerutil.chkAvail().then(function() {
 			if (_device && reconnect) {
 				giikerutil.log('[bluetooth]', 'reconnecting...', _device);
@@ -163,6 +164,7 @@ function BtDeviceGroupFactory() {
 	}
 
 	function stop(isHardwareEvent) {
+		gyroCallback(null);
 		if (!_device) {
 			return Promise.resolve();
 		}
@@ -175,6 +177,7 @@ function BtDeviceGroupFactory() {
 
 	var callback = $.noop;
 	var evtCallback = $.noop;
+	var gyroCallback = $.noop;
 
 	return {
 		init: init,
@@ -187,6 +190,12 @@ function BtDeviceGroupFactory() {
 		},
 		setEventCallback: function(func) {
 			evtCallback = func;
+		},
+		setGyroCallback: function(func) {
+			gyroCallback = func;
+		},
+		gyroCallback: function(quaternion, protocol) {
+			gyroCallback(quaternion, protocol);
 		},
 		getCube: function() {
 			return cube || (DEBUGBL && {
