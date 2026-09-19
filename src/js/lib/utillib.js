@@ -77,6 +77,9 @@ ISCSTIMER && execMain(function() {
 	for (var i = 0; i < constants.length; i++) {
 		window[constants[i]] = window[constants[i]] || '|||||||||||||||';
 	}
+	window.PROPERTY_GIIGYRO = window.PROPERTY_GIIGYRO || 'Follow GAN gyroscope (Virtual display)';
+	window.GIIKER_GYRO_RESET = window.GIIKER_GYRO_RESET || 'Calibrate orientation';
+	window.GIIKER_GYRO_WAIT = window.GIIKER_GYRO_WAIT || 'Waiting for gyro data; align cube with the display';
 
 	window.requestAnimFrame = (function() {
 		return window.requestAnimationFrame ||

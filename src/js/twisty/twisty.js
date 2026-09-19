@@ -90,6 +90,7 @@ window.twistyjs = (function() {
 		var touchCube;
 		var cameraTheta = 0;
 		var cameraPhi = 6;
+		var pendingPoseFrame = null;
 
 		/*
 		 * Initialization Methods
@@ -118,6 +119,10 @@ window.twistyjs = (function() {
 			// Since we're about to destroy our twistyCanvas, that animation request
 			// will never fire. Thus, we must explicitly stop animating here.
 			stopAnimation();
+			if (pendingPoseFrame !== null) {
+				cancelRequestAnimFrame(pendingPoseFrame);
+				pendingPoseFrame = null;
+			}
 
 			$(twistyContainer).empty();
 			//		log("Canvas Size: " + $(twistyContainer).width() + " x " + $(twistyContainer).height());
@@ -398,6 +403,22 @@ window.twistyjs = (function() {
 		this.cam = function(deltaTheta) {
 			moveCameraDelta(deltaTheta, 0);
 		}
+
+		this.setPose = function(quaternion) {
+			if (!twisty) {
+				return false;
+			}
+			var q = quaternion || [0, 0, 0, 1];
+			twisty._3d.useQuaternion = true;
+			twisty._3d.quaternion.set(q[0], q[1], q[2], q[3]);
+			if (pendingPoseFrame === null) {
+				pendingPoseFrame = requestAnimFrame(function() {
+					pendingPoseFrame = null;
+					render();
+				}, twistyCanvas);
+			}
+			return true;
+		};
 
 		function render() {
 			renderer.render(scene, camera);

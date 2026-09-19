@@ -9,6 +9,24 @@ execMain(function(timer) {
 	var currentFacelet = mathlib.SOLVED_FACELET;
 	var rawMoves = [];
 	var curPuzzle = '333';
+	var gyroPose = new GiikerPose();
+	var gyroProtocol = '';
+	var gyroControls = $('<div class="giiker-gyro" />').css('font-size', '0.7em');
+	var gyroStatus = $('<span />');
+
+	function drawGyro() {
+		giikerVRC.setPose(kernel.getProp('giiGyro') ? gyroPose : null);
+		var status = gyroProtocol || GIIKER_GYRO_WAIT;
+		if (gyroStatus.text() != status) {
+			gyroStatus.text(status);
+		}
+	}
+
+	function resetGyro() {
+		gyroPose.reset();
+		gyroProtocol = '';
+		drawGyro();
+	}
 
 	var giikerVRC = (function() {
 		var isReseted = false;
@@ -52,6 +70,7 @@ execMain(function(timer) {
 				var targetOri = kernel.getProp('giiOri');
 				targetOri = targetOri == 'auto' ? -1 : ~~targetOri;
 				setOri(targetOri);
+				drawGyro();
 			});
 			isReseted = true;
 		}
@@ -171,7 +190,10 @@ execMain(function(timer) {
 			resetVRC: resetVRC, //reset to solved
 			setState: setState,
 			setOri: setOri,
-			setSize: setSize
+			setSize: setSize,
+			setPose: function(pose) {
+				puzzleObj && puzzleObj.setPose(pose && pose.get(curVRCCubie.ori || 0));
+			}
 		}
 	})();
 
@@ -328,13 +350,31 @@ execMain(function(timer) {
 	function setVRC(enable) {
 		enableVRC = enable;
 		enable ? div.show() : div.hide();
+		gyroControls.toggle(!!enable && kernel.getProp('giiVRC') == 'v' && kernel.getProp('giiGyro'));
 		if (enable) {
 			giikerVRC.resetVRC(true, true, curPuzzle);
 		}
 	}
 
 	$(function() {
+		GiikerCube.setGyroCallback(function(quaternion, protocol) {
+			if (!quaternion) {
+				resetGyro();
+			} else if (enable && kernel.getProp('giiGyro') && kernel.getProp('giiVRC') == 'v') {
+				gyroPose.update(quaternion);
+				gyroProtocol = protocol;
+				drawGyro();
+			}
+		});
 		div.appendTo("#container");
+		gyroControls.append(
+			$('<button type="button" />').text(GIIKER_GYRO_RESET).on('click', resetGyro),
+			' ', gyroStatus
+		).insertAfter(div).toggle(enableVRC && kernel.getProp('giiVRC') == 'v' && kernel.getProp('giiGyro'));
+		kernel.regListener('giikerGyro', 'property', function() {
+			resetGyro();
+			gyroControls.toggle(enableVRC && kernel.getProp('giiVRC') == 'v' && kernel.getProp('giiGyro'));
+		}, /^giiGyro$/);
 		kernel.regListener('giikerVRC', 'property', function(signal, value) {
 			if (enableVRC) {
 				giikerVRC.resetVRC(true, true, curPuzzle);
@@ -364,6 +404,9 @@ execMain(function(timer) {
 	timer.giiker = {
 		setEnable: function(input) { //s: stackmat, m: moyu
 			enable = input == 'g';
+			if (!enable) {
+				resetGyro();
+			}
 			if (enable && !GiikerCube.isConnected()) {
 				startConnect();
 			} else if (!enable) {

@@ -282,6 +282,32 @@ var scramble_333 = (function(getNPerm, setNPerm, getNParity, rn, rndEl) {
 	];
 	var f2lprobs = mathlib.idxArray(f2l_map, 1);
 	var f2lfilter = mathlib.idxArray(f2l_map, 2);
+	var f2lGroups = (typeof F2L_GROUPS == 'undefined'
+		? 'Same top color|Different top colors adjacent|Different top colors separated|Cross color on top|Corner in slot|Edge in slot|Both in slot|Solved'
+		: F2L_GROUPS).split('|');
+	var lsllfilter = f2l_map.map(function(entry) {
+		var caze = entry[0];
+		var ep = caze & 0xf;
+		var eo = caze >> 4 & 1;
+		var cp = caze >> 8 & 0xf;
+		var co = caze >> 12 & 3;
+		var group;
+		if (cp == 4 && ep == 8) {
+			group = caze == 0x0408 ? 7 : 6;
+		} else if (cp == 4) {
+			group = 4;
+		} else if (ep == 8) {
+			group = 5;
+		} else if (co == 0) {
+			group = 3;
+		} else if ('URB'.charAt(co) == 'BR'.charAt(eo)) {
+			group = 0;
+		} else {
+			// In these cases the corner is at UFR; UR and UF touch it on the U face.
+			group = ep == 0 || ep == 1 ? 1 : 2;
+		}
+		return f2lGroups[group] + '-' + entry[2].split('-')[1];
+	});
 
 	function getLSLLScramble(type, length, cases, neut) {
 		var caze = f2l_map[scrMgr.fixCase(cases, f2lprobs)][0];
@@ -1112,7 +1138,7 @@ var scramble_333 = (function(getNPerm, setNPerm, getNParity, rn, rndEl) {
 		('corners', getCornerScramble)
 		('333custom', getCustomScramble, [customfilter, customprobs])
 		('ll', getLLScramble)
-		('lsll2', getLSLLScramble, [f2lfilter, f2lprobs, getF2LImage.bind(null, 'GGGGDGGGGGGGGRRGRRGGGBBGBBG', f2l_map, f2lprobs)])
+		('lsll2', getLSLLScramble, [lsllfilter, f2lprobs, getF2LImage.bind(null, 'GGGGDGGGGGGGGRRGRRGGGBBGBBG', f2l_map, f2lprobs)])
 		('f2l', getF2LScramble)
 		('zbll', getZBLLScramble, [zbfilter, zbprobs, getZBLLImage])
 		('zzll', getZZLLScramble)

@@ -29,12 +29,16 @@ jobs:
         with: 
           distribution: 'temurin'
           java-version: '11'
-      - name: Setup php
-        uses: shivammathur/setup-php@2.37.1
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          php-version: '8.0'
+          node-version: '22'
+      - name: Training regressions
+        run: node npm_export/testbench/training-test.js
       - name: Build cstimer
-        run: mkdir dist/local dist/local/js dist/local/css && make local
+        run: node experiment/build-static.js
+      - name: Check static output
+        run: node npm_export/testbench/static-test.js
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
